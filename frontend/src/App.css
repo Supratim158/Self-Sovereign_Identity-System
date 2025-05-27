@@ -1,0 +1,32 @@
+.App {
+  text-align: center;
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+
+.form {
+  max-width: 400px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+input {
+  padding: 10px;
+  font-size: 16px;
+}
+
+button {
+  padding: 10px;
+  background-color: #5c67f2;
+  color: white;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+}
+
+button:disabled {
+  background-color: #999;
+  cursor: not-allowed;
+}
