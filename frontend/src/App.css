@@ -1,0 +1,24 @@
+.App {
+  font-family: Arial, sans-serif;
+  max-width: 500px;
+  margin: 50px auto;
+  text-align: center;
+}
+
+form {
+  background-color: #f3f3f3;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+input {
+  padding: 8px;
+  width: 100%;
+  margin-top: 5px;
+}
+
+button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  cursor: pointer;
+}
