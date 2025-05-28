@@ -17,7 +17,6 @@ export default function IdentityForm() {
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState([]);
 
-  // Function to create identity on blockchain
   async function createIdentity() {
     setError("");
     setSuccess("");
@@ -36,7 +35,6 @@ export default function IdentityForm() {
       const signer = await provider.getSigner();
       const contract = new ethers.Contract(contractAddress, contractABI, signer);
 
-      // Combine dob, aadhar, and metadata into a single metadata string
       const meta = JSON.stringify({
         dob,
         aadhar,
@@ -53,7 +51,6 @@ export default function IdentityForm() {
       setAadhar("");
       setMetadata("");
 
-      // Update history locally
       setHistory((prev) => [
         ...prev,
         { name, email, dob, aadhar, metadata: meta },
@@ -66,106 +63,99 @@ export default function IdentityForm() {
     }
   }
 
-  // Toggle history visibility
   function toggleHistory() {
     setShowHistory(!showHistory);
   }
 
   return (
     <div className="identity-form-container">
-      <h2>Self-Sovereign Identity Form</h2>
+      <h2 className="form-heading">Self-Sovereign Identity Form</h2>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          createIdentity();
-        }}
-      >
-        <label>Name*</label>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Enter your name"
-          required
-        />
+      <div className="form-wrapper">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            createIdentity();
+          }}
+        >
+          <label>Name*</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter your name"
+            required
+          />
 
-        <label>Email*</label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter your email"
-          required
-        />
+          <label>Email*</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email"
+            required
+          />
 
-        <label>Date of Birth*</label>
-        <input
-          type="date"
-          value={dob}
-          onChange={(e) => setDob(e.target.value)}
-          required
-        />
+          <label>Date of Birth*</label>
+          <input
+            type="date"
+            value={dob}
+            onChange={(e) => setDob(e.target.value)}
+            required
+          />
 
-        <label>Aadhar Number*</label>
-        <input
-          type="text"
-          value={aadhar}
-          onChange={(e) => setAadhar(e.target.value)}
-          placeholder="Enter your Aadhar number"
-          required
-          maxLength={12}
-          pattern="\d{12}"
-          title="Aadhar number must be exactly 12 digits"
-        />
+          <label>Aadhar Number*</label>
+          <input
+            type="text"
+            value={aadhar}
+            onChange={(e) => setAadhar(e.target.value)}
+            placeholder="Enter your Aadhar number"
+            required
+            maxLength={12}
+            pattern="\d{12}"
+            title="Aadhar number must be exactly 12 digits"
+          />
 
-        <label>Metadata</label>
-        <input
-          type="text"
-          value={metadata}
-          onChange={(e) => setMetadata(e.target.value)}
-          placeholder="Additional metadata (optional)"
-        />
+          <label>Metadata</label>
+          <input
+            type="text"
+            value={metadata}
+            onChange={(e) => setMetadata(e.target.value)}
+            placeholder="Additional metadata (optional)"
+          />
 
-        <button type="submit" disabled={loading}>
-          {loading ? "Submitting..." : "Create Identity"}
+          <button type="submit" disabled={loading}>
+            {loading ? "Submitting..." : "Create Identity"}
+          </button>
+        </form>
+
+        <button className="history-toggle-btn" onClick={toggleHistory}>
+          {showHistory ? "Hide History" : "Show History"}
         </button>
-      </form>
 
-      <button onClick={toggleHistory} style={{ marginTop: "20px" }}>
-        {showHistory ? "Hide History" : "Show History"}
-      </button>
+        {error && <p className="error-message">{error}</p>}
+        {success && <p className="success-message">{success}</p>}
 
-      {error && (
-        <p style={{ color: "red", marginTop: "1rem", textAlign: "center" }}>
-          {error}
-        </p>
-      )}
-      {success && (
-        <p style={{ color: "lightgreen", marginTop: "1rem", textAlign: "center" }}>
-          {success}
-        </p>
-      )}
-
-      {showHistory && (
-        <div className="history-section">
-          <h3>Identity History</h3>
-          <ul>
-            {history.length > 0 ? (
-              history.map((item, index) => (
-                <li key={index}>
-                  <strong>Name:</strong> {item.name} | <strong>Email:</strong>{" "}
-                  {item.email} | <strong>DOB:</strong> {item.dob} |{" "}
-                  <strong>Aadhar:</strong> {item.aadhar} |{" "}
-                  <strong>Metadata:</strong> {item.metadata}
-                </li>
-              ))
-            ) : (
-              <li>No history found</li>
-            )}
-          </ul>
-        </div>
-      )}
+        {showHistory && (
+          <div className="history-section">
+            <h3>Identity History</h3>
+            <ul>
+              {history.length > 0 ? (
+                history.map((item, index) => (
+                  <li key={index}>
+                    <strong>Name:</strong> {item.name} | <strong>Email:</strong>{" "}
+                    {item.email} | <strong>DOB:</strong> {item.dob} |{" "}
+                    <strong>Aadhar:</strong> {item.aadhar} |{" "}
+                    <strong>Metadata:</strong> {item.metadata}
+                  </li>
+                ))
+              ) : (
+                <li>No history found</li>
+              )}
+            </ul>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
