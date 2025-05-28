@@ -1,21 +1,22 @@
 
-
-import { BrowserProvider, Contract } from "ethers";
+import { ethers } from "ethers";
 import ContractABI from "./IdentitySystemABI.json";
 
-const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3"; // Replace this
 
-export async function getContract() {
-  if (!window.ethereum) throw new Error("MetaMask not found");
+let contract;
 
-  await window.ethereum.request({ method: "eth_requestAccounts" });
+export const getContract = async () => {
+  if (contract) return contract;
 
-  const provider = new BrowserProvider(window.ethereum);
+  if (!window.ethereum) {
+    throw new Error("MetaMask not detected");
+  }
+
+  const provider = new ethers.BrowserProvider(window.ethereum);
   const signer = await provider.getSigner();
-
-  const contract = new Contract(CONTRACT_ADDRESS, ContractABI, signer);
-
+  contract = new ethers.Contract(contractAddress, ContractABI.abi, signer);
   return contract;
-}
+};
 
 

@@ -1,158 +1,158 @@
 [
     {
-            "anonymous": false,
-            "inputs": [
+      "anonymous": false,
+      "inputs": [
         {
-                "indexed": true,
-                "internalType": "address",
-                "name": "user",
-                "type": "address"
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
         },
         {
-                "indexed": false,
-                "internalType": "string",
-                "name": "name",
-                "type": "string"
+          "indexed": false,
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
         },
         {
-                "indexed": false,
-                "internalType": "string",
-                "name": "email",
-                "type": "string"
+          "indexed": false,
+          "internalType": "string",
+          "name": "email",
+          "type": "string"
         }
-        ],
-        "name": "IdentityCreated",
-        "type": "event"
+      ],
+      "name": "IdentityCreated",
+      "type": "event"
     },
     {
-        "anonymous": false,
-        "inputs": [
+      "anonymous": false,
+      "inputs": [
         {
-            "indexed": true,
-            "internalType": "address",
-            "name": "user",
-            "type": "address"
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
         },
         {
-            "indexed": false,
-            "internalType": "string",
-            "name": "name",
-            "type": "string"
+          "indexed": false,
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
         },
         {
-            "indexed": false,
-            "internalType": "string",
-            "name": "email",
-            "type": "string"
+          "indexed": false,
+          "internalType": "string",
+          "name": "email",
+          "type": "string"
         }
-        ],
-        "name": "IdentityUpdated",
-        "type": "event"
+      ],
+      "name": "IdentityUpdated",
+      "type": "event"
     },
     {
-        "anonymous": false,
-        "inputs": [
+      "anonymous": false,
+      "inputs": [
         {
-            "indexed": true,
-            "internalType": "address",
-            "name": "user",
-            "type": "address"
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
         }
-        ],
-        "name": "IdentityVerified",
-        "type": "event"
-    },
-    {   
-        "inputs": [
-        {
-            "internalType": "string",
-            "name": "_name",
-            "type": "string"
-        },
-        {
-            "internalType": "string",
-            "name": "_email",
-            "type": "string"
-        },
-        {
-            "internalType": "string",
-            "name": "_metadata",
-            "type": "string"
-        }
-        ],
-        "name": "createIdentity",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
+      ],
+      "name": "IdentityVerified",
+      "type": "event"
     },
     {
-        "inputs": [
+      "inputs": [
         {
-            "internalType": "address",
-            "name": "_user",
-            "type": "address"
+          "internalType": "string",
+          "name": "_name",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_email",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_metadata",
+          "type": "string"
         }
-        ],
-        "name": "getIdentity",
-        "outputs": [
-        {
-            "internalType": "string",
-            "name": "",
-            "type": "string"
-        },
-        {
-            "internalType": "string",
-            "name": "",
-            "type": "string"
-        },
-        {
-            "internalType": "string",
-            "name": "",
-            "type": "string"
-        },
-        {
-            "internalType": "bool",
-            "name": "",
-            "type": "bool"
-        }
-        ],
-        "stateMutability": "view",
-        "type": "function"
+      ],
+      "name": "createIdentity",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
-        "inputs": [
+      "inputs": [
         {
-            "internalType": "string",
-            "name": "_name",
-            "type": "string"
-        },
-        {
-            "internalType": "string",
-            "name": "_email",
-            "type": "string"
-        },
-        {
-            "internalType": "string",
-            "name": "_metadata",
-            "type": "string"
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
         }
-        ],
-        "name": "updateIdentity",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
+      ],
+      "name": "getIdentity",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        },
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
     },
     {
-        "inputs": [
+      "inputs": [
         {
-            "internalType": "address",
-            "name": "_user",
-            "type": "address"
+          "internalType": "string",
+          "name": "_name",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_email",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_metadata",
+          "type": "string"
         }
-        ],
-        "name": "verifyIdentity",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
+      ],
+      "name": "updateIdentity",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "verifyIdentity",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
     }
-    ]
+  ]
