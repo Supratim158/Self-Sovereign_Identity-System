@@ -20,11 +20,13 @@ export default function IdentityForm() {
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState([]);
   const [aadharError, setAadharError] = useState("");
+  const [emailError, setEmailError] = useState("");
 
   async function createIdentity() {
     setError("");
     setSuccess("");
     setAadharError("");
+    setEmailError("");
     if (!window.ethereum) {
       setError("MetaMask not detected");
       return;
@@ -35,6 +37,10 @@ export default function IdentityForm() {
     }
     if (!validateAadhar(aadhar)) {
       setAadharError("Invalid Aadhar number");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailError("Invalid email format");
       return;
     }
     try {
@@ -88,6 +94,7 @@ export default function IdentityForm() {
     setEncryptionKey("");
     setCustomAttributes([{ key: "", value: "" }]);
     setAadharError("");
+    setEmailError("");
   }
 
   function toggleHistory() {
@@ -165,10 +172,18 @@ export default function IdentityForm() {
               id="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setEmailError(
+                  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.target.value)
+                    ? ""
+                    : "Invalid email format"
+                );
+              }}
               placeholder="Enter your email"
               required
             />
+            {emailError && <p className="error-message">{emailError}</p>}
           </div>
 
           <div className="input-group">
