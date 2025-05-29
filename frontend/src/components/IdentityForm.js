@@ -17,10 +17,13 @@ export default function IdentityForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [txHash, setTxHash] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState([]);
   const [aadharError, setAadharError] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   async function createIdentity() {
     setError("");
@@ -64,19 +67,26 @@ export default function IdentityForm() {
       const tx = await contract.createIdentity(name, email, meta);
       const receipt = await tx.wait();
 
-      setSuccess(`Identity created successfully! Tx Hash: ${receipt.hash}`);
-      setHistory((prev) => [
-        ...prev,
-        {
-          name,
-          email,
-          dob,
-          aadhar: encryptData(aadhar, encryptionKey),
-          metadata: meta,
-          status: Math.random() > 0.5 ? "Verified" : "Pending",
-          txHash: receipt.hash,
-        },
-      ]);
+      setSuccess("Identity created successfully!");
+      setTxHash(receipt.hash);
+      const newIdentity = {
+        name,
+        email,
+        dob,
+        aadhar: encryptData(aadhar, encryptionKey),
+        metadata: meta,
+        status: Math.random() > 0.5 ? "Verified" : "Pending",
+        txHash: receipt.hash,
+      };
+
+      if (editingIndex !== null) {
+        setHistory((prev) =>
+          prev.map((item, i) => (i === editingIndex ? newIdentity : item))
+        );
+        setEditingIndex(null);
+      } else {
+        setHistory((prev) => [...prev, newIdentity]);
+      }
       resetForm();
     } catch (err) {
       console.error(err);
@@ -96,6 +106,8 @@ export default function IdentityForm() {
     setCustomAttributes([{ key: "", value: "" }]);
     setAadharError("");
     setEmailError("");
+    setTxHash(null);
+    setEditingIndex(null);
   }
 
   function toggleHistory() {
@@ -138,6 +150,20 @@ export default function IdentityForm() {
     setSuccess("Identity deleted successfully!");
   }
 
+  function handleEdit(index) {
+    const item = history[index];
+    setName(item.name);
+    setEmail(item.email);
+    setDob(item.dob);
+    setAadhar(encryptionKey && decryptData(item.aadhar, encryptionKey) ? decryptData(item.aadhar, encryptionKey) : "");
+    setMetadata(JSON.parse(item.metadata).additional || "");
+    const custom = JSON.parse(item.metadata).custom || {};
+    setCustomAttributes(
+      Object.entries(custom).map(([key, value]) => ({ key, value }))
+    );
+    setEditingIndex(index);
+  }
+
   function addCustomAttribute() {
     setCustomAttributes((prev) => [...prev, { key: "", value: "" }]);
   }
@@ -148,10 +174,28 @@ export default function IdentityForm() {
     );
   }
 
+  const filteredHistory = history.filter(
+    (item) =>
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="identity-form-container">
       {loading && <div className="loading-spinner"></div>}
       <h2 className="form-heading">Self-Sovereign Identity Form</h2>
+      {txHash && (
+        <p className="tx-hash">
+          Transaction Hash:{" "}
+          <a
+            href={`https://etherscan.io/tx/${txHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {txHash.slice(0, 6)}...
+          </a>
+        </p>
+      )}
 
       <div className="form-wrapper">
         <div className="form-content">
@@ -265,7 +309,7 @@ export default function IdentityForm() {
 
           <div className="button-group">
             <button onClick={createIdentity} disabled={loading}>
-              {loading ? "Submitting..." : "Create Identity"}
+              {loading ? "Submitting..." : editingIndex !== null ? "Update Identity" : "Create Identity"}
             </button>
             <button onClick={resetForm}>Reset Form</button>
             <button className="history-toggle-btn" onClick={toggleHistory}>
@@ -293,9 +337,17 @@ export default function IdentityForm() {
         {showHistory && (
           <div className="history-section">
             <h3>Identity History</h3>
+            <div className="search-bar">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by name or email"
+              />
+            </div>
             <ul>
-              {history.length > 0 ? (
-                history.map((item, index) => (
+              {filteredHistory.length > 0 ? (
+                filteredHistory.map((item, index) => (
                   <li key={index}>
                     <strong>Name:</strong> {item.name} | <strong>Email:</strong>{" "}
                     {item.email} | <strong>DOB:</strong> {item.dob} |{" "}
@@ -306,14 +358,13 @@ export default function IdentityForm() {
                     <strong>Status:</strong>{" "}
                     <span className={`status-${item.status.toLowerCase()}`}>
                       {item.status}
-                    </span> | <strong>Tx Hash:</strong>{" "}
-                    <a
-                      href={`https://etherscan.io/tx/${item.txHash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    </span>
+                    <button
+                      className="edit-btn"
+                      onClick={() => handleEdit(index)}
                     >
-                      {item.txHash ? item.txHash.slice(0, 6) + "..." : "N/A"}
-                    </a>
+                      Edit
+                    </button>
                     <button
                       className="delete-btn"
                       onClick={() => handleDelete(index)}
