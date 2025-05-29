@@ -121,7 +121,8 @@ body {
 .delete-btn,
 .edit-btn,
 .confirm-btn,
-.cancel-btn {
+.cancel-btn,
+.pagination-btn {
   background: linear-gradient(135deg, #ff416c, #ff4b2b);
   color: white;
   padding: 0.9rem 1.5rem;
@@ -153,12 +154,18 @@ body {
   margin-left: 0.5rem;
 }
 
+.pagination-btn:disabled {
+  background: linear-gradient(135deg, #999, #777);
+  cursor: not-allowed;
+}
+
 .form-content button:hover,
 .history-toggle-btn:hover,
 .delete-btn:hover,
 .edit-btn:hover,
 .confirm-btn:hover,
-.cancel-btn:hover {
+.cancel-btn:hover,
+.pagination-btn:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(255, 75, 43, 0.4);
 }
@@ -330,6 +337,19 @@ body {
   border-color: #333 transparent transparent transparent;
 }
 
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.pagination-info {
+  font-size: 1rem;
+  color: #f1f1f1;
+}
+
 @media screen and (max-width: 768px) {
   .identity-form-container {
     grid-template-columns: 1fr;
@@ -367,7 +387,8 @@ body {
   .delete-btn,
   .edit-btn,
   .confirm-btn,
-  .cancel-btn {
+  .cancel-btn,
+  .pagination-btn {
     width: 100%;
   }
 
@@ -393,5 +414,10 @@ body {
   .tooltip-text::after {
     top: -10px;
     border-color: transparent transparent #333 transparent;
+  }
+
+  .pagination-controls {
+    flex-direction: column;
+    gap: 0.5rem;
   }
 }

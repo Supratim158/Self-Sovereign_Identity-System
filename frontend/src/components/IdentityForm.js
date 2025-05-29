@@ -44,6 +44,8 @@ export default function IdentityForm() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteIndex, setDeleteIndex] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   async function connectWallet() {
     if (!window.ethereum) {
@@ -216,6 +218,26 @@ export default function IdentityForm() {
     reader.readAsText(file);
   }
 
+  function handleImportKey(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const imported = JSON.parse(event.target.result);
+        if (imported.encryptionKey && typeof imported.encryptionKey === "string") {
+          setEncryptionKey(imported.encryptionKey);
+          setSuccess("Encryption key imported successfully!");
+        } else {
+          setError("Invalid key file format");
+        }
+      } catch {
+        setError("Failed to import encryption key");
+      }
+    };
+    reader.readAsText(file);
+  }
+
   function handleDelete(index) {
     setDeleteIndex(index);
     setShowDeleteConfirm(true);
@@ -226,6 +248,9 @@ export default function IdentityForm() {
     setSuccess("Identity deleted successfully!");
     setShowDeleteConfirm(false);
     setDeleteIndex(null);
+    if (filteredHistory.length - 1 <= (currentPage - 1) * itemsPerPage && currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
   }
 
   function cancelDelete() {
@@ -262,6 +287,14 @@ export default function IdentityForm() {
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedHistory = filteredHistory.slice(startIndex, startIndex + itemsPerPage);
+
+  function handlePageChange(page) {
+    setCurrentPage(page);
+  }
 
   return (
     <div className="identity-form-container">
@@ -347,7 +380,7 @@ export default function IdentityForm() {
             <Tooltip text="Enter 12-digit Aadhar number (e.g., 123456789012)">
               <input
                 id="aadhar"
-                type="text"
+                type="password"
                 value={aadhar}
                 onChange={(e) => {
                   setAadhar(e.target.value);
@@ -437,6 +470,18 @@ export default function IdentityForm() {
             </button>
             <button onClick={handleExport}>Export Identities</button>
             <button onClick={handleExportKey}>Export Key</button>
+            <button
+              onClick={() => document.getElementById("import-key-input").click()}
+            >
+              Import Key
+            </button>
+            <input
+              type="file"
+              accept=".json"
+              onChange={handleImportKey}
+              style={{ display: "none" }}
+              id="import-key-input"
+            />
             <input
               type="file"
               accept=".json"
@@ -467,9 +512,9 @@ export default function IdentityForm() {
               />
             </div>
             <ul>
-              {filteredHistory.length > 0 ? (
-                filteredHistory.map((item, index) => (
-                  <li key={index}>
+              {paginatedHistory.length > 0 ? (
+                paginatedHistory.map((item, index) => (
+                  <li key={startIndex + index}>
                     <strong>Name:</strong> {item.name} | <strong>Email:</strong>{" "}
                     {item.email} | <strong>DOB:</strong> {item.dob} |{" "}
                     <strong>Aadhar:</strong>{" "}
@@ -482,13 +527,13 @@ export default function IdentityForm() {
                     </span>
                     <button
                       className="edit-btn"
-                      onClick={() => handleEdit(index)}
+                      onClick={() => handleEdit(startIndex + index)}
                     >
                       Edit
                     </button>
                     <button
                       className="delete-btn"
-                      onClick={() => handleDelete(index)}
+                      onClick={() => handleDelete(startIndex + index)}
                     >
                       Delete
                     </button>
@@ -498,6 +543,27 @@ export default function IdentityForm() {
                 <li>No history found</li>
               )}
             </ul>
+            {totalPages > 1 && (
+              <div className="pagination-controls">
+                <button
+                  className="pagination-btn"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </button>
+                <span className="pagination-info">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  className="pagination-btn"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
