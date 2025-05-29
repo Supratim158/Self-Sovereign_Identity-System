@@ -1,10 +1,27 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import contractABI from "../utils/IdentitySystemABI.json";
 import { validateAadhar, encryptData, decryptData } from "../utils/cryptoUtils";
 import "./IdentityForm.css";
 
 const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+
+function Tooltip({ text, children }) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  return (
+    <div className="tooltip-container">
+      {children}
+      <span
+        className={`tooltip-text ${isVisible ? "visible" : ""}`}
+        onMouseEnter={() => setIsVisible(true)}
+        onMouseLeave={() => setIsVisible(false)}
+      >
+        {text}
+      </span>
+    </div>
+  );
+}
 
 export default function IdentityForm() {
   const [name, setName] = useState("");
@@ -18,12 +35,45 @@ export default function IdentityForm() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [txHash, setTxHash] = useState(null);
+  const [walletAddress, setWalletAddress] = useState("");
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState([]);
   const [aadharError, setAadharError] = useState("");
   const [emailError, setEmailError] = useState("");
   const [editingIndex, setEditingIndex] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteIndex, setDeleteIndex] = useState(null);
+
+  async function connectWallet() {
+    if (!window.ethereum) {
+      setError("MetaMask not detected");
+      return false;
+    }
+    try {
+      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+      setWalletAddress(accounts[0] || "");
+      return true;
+    } catch (err) {
+      console.error("Error connecting wallet:", err);
+      setError("Failed to connect wallet");
+      return false;
+    }
+  }
+
+  useEffect(() => {
+    connectWallet();
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", (accounts) => {
+        setWalletAddress(accounts[0] || "");
+      });
+    }
+    return () => {
+      if (window.ethereum) {
+        window.ethereum.removeListener("accountsChanged", setWalletAddress);
+      }
+    };
+  }, []);
 
   async function createIdentity() {
     setError("");
@@ -48,6 +98,10 @@ export default function IdentityForm() {
     }
     try {
       setLoading(true);
+      const walletConnected = await connectWallet();
+      if (!walletConnected) {
+        return;
+      }
       await window.ethereum.request({ method: "eth_requestAccounts" });
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
@@ -125,6 +179,23 @@ export default function IdentityForm() {
     document.body.removeChild(link);
   }
 
+  function handleExportKey() {
+    if (!encryptionKey) {
+      setError("No encryption key to export");
+      return;
+    }
+    const keyData = { encryptionKey };
+    const dataStr = JSON.stringify(keyData);
+    const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
+    const link = document.createElement("a");
+    link.setAttribute("href", dataUri);
+    link.setAttribute("download", "encryption_key.json");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setSuccess("Encryption key exported successfully!");
+  }
+
   function handleImport(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -146,8 +217,20 @@ export default function IdentityForm() {
   }
 
   function handleDelete(index) {
-    setHistory((prev) => prev.filter((_, i) => i !== index));
+    setDeleteIndex(index);
+    setShowDeleteConfirm(true);
+  }
+
+  function confirmDelete() {
+    setHistory((prev) => prev.filter((_, i) => i !== deleteIndex));
     setSuccess("Identity deleted successfully!");
+    setShowDeleteConfirm(false);
+    setDeleteIndex(null);
+  }
+
+  function cancelDelete() {
+    setShowDeleteConfirm(false);
+    setDeleteIndex(null);
   }
 
   function handleEdit(index) {
@@ -196,110 +279,147 @@ export default function IdentityForm() {
           </a>
         </p>
       )}
+      {walletAddress && (
+        <p className="wallet-address">
+          Connected Wallet: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+        </p>
+      )}
 
       <div className="form-wrapper">
         <div className="form-content">
           <div className="input-group">
             <label htmlFor="name">Name*</label>
-            <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your name"
-              required
-            />
+            <Tooltip text="Enter your full name (e.g., John Doe)">
+              <input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter your name"
+                required
+                onFocus={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.add("visible")}
+                onBlur={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.remove("visible")}
+              />
+            </Tooltip>
           </div>
 
           <div className="input-group">
             <label htmlFor="email">Email*</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                setEmailError(
-                  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.target.value)
-                    ? ""
-                    : "Invalid email format"
-                );
-              }}
-              placeholder="Enter your email"
-              required
-            />
+            <Tooltip text="Enter a valid email (e.g., user@example.com)">
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setEmailError(
+                    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.target.value)
+                      ? ""
+                      : "Invalid email format"
+                  );
+                }}
+                placeholder="Enter your email"
+                required
+                onFocus={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.add("visible")}
+                onBlur={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.remove("visible")}
+              />
+            </Tooltip>
             {emailError && <p className="error-message">{emailError}</p>}
           </div>
 
           <div className="input-group">
             <label htmlFor="dob">Date of Birth*</label>
-            <input
-              id="dob"
-              type="date"
-              value={dob}
-              onChange={(e) => setDob(e.target.value)}
-              required
-            />
+            <Tooltip text="Select your date of birth (YYYY-MM-DD)">
+              <input
+                id="dob"
+                type="date"
+                value={dob}
+                onChange={(e) => setDob(e.target.value)}
+                required
+                onFocus={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.add("visible")}
+                onBlur={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.remove("visible")}
+              />
+            </Tooltip>
           </div>
 
           <div className="input-group">
             <label htmlFor="aadhar">Aadhar Number*</label>
-            <input
-              id="aadhar"
-              type="text"
-              value={aadhar}
-              onChange={(e) => {
-                setAadhar(e.target.value);
-                setAadharError(validateAadhar(e.target.value) ? "" : "Invalid Aadhar number");
-              }}
-              placeholder="Enter your Aadhar number"
-              required
-              maxLength={12}
-              pattern="\d{12}"
-              title="Aadhar number must be exactly 12 digits"
-            />
+            <Tooltip text="Enter 12-digit Aadhar number (e.g., 123456789012)">
+              <input
+                id="aadhar"
+                type="text"
+                value={aadhar}
+                onChange={(e) => {
+                  setAadhar(e.target.value);
+                  setAadharError(validateAadhar(e.target.value) ? "" : "Invalid Aadhar number");
+                }}
+                placeholder="Enter your Aadhar number"
+                required
+                maxLength={12}
+                pattern="\d{12}"
+                title="Aadhar number must be exactly 12 digits"
+                onFocus={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.add("visible")}
+                onBlur={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.remove("visible")}
+              />
+            </Tooltip>
             {aadharError && <p className="error-message">{aadharError}</p>}
           </div>
 
           <div className="input-group">
             <label htmlFor="encryptionKey">Encryption Key*</label>
-            <input
-              id="encryptionKey"
-              type="password"
-              value={encryptionKey}
-              onChange={(e) => setEncryptionKey(e.target.value)}
-              placeholder="Enter encryption key"
-              required
-            />
+            <Tooltip text="Enter a secure key for encryption">
+              <input
+                id="encryptionKey"
+                type="password"
+                value={encryptionKey}
+                onChange={(e) => setEncryptionKey(e.target.value)}
+                placeholder="Enter encryption key"
+                required
+                onFocus={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.add("visible")}
+                onBlur={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.remove("visible")}
+              />
+            </Tooltip>
           </div>
 
           <div className="input-group">
             <label htmlFor="metadata">Metadata</label>
-            <input
-              id="metadata"
-              type="text"
-              value={metadata}
-              onChange={(e) => setMetadata(e.target.value)}
-              placeholder="Additional metadata (optional)"
-            />
+            <Tooltip text="Optional: Additional info (e.g., address)">
+              <input
+                id="metadata"
+                type="text"
+                value={metadata}
+                onChange={(e) => setMetadata(e.target.value)}
+                placeholder="Additional metadata (optional)"
+                onFocus={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.add("visible")}
+                onBlur={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.remove("visible")}
+              />
+            </Tooltip>
           </div>
 
           <div className="input-group">
             <label>Custom Attributes</label>
             {customAttributes.map((attr, index) => (
               <div key={index} className="custom-attribute-group">
-                <input
-                  type="text"
-                  value={attr.key}
-                  onChange={(e) => updateCustomAttribute(index, "key", e.target.value)}
-                  placeholder="Attribute key"
-                />
-                <input
-                  type="text"
-                  value={attr.value}
-                  onChange={(e) => updateCustomAttribute(index, "value", e.target.value)}
-                  placeholder="Attribute value"
-                />
+                <Tooltip text="Key-value pairs (e.g., phone: 1234567890)">
+                  <input
+                    type="text"
+                    value={attr.key}
+                    onChange={(e) => updateCustomAttribute(index, "key", e.target.value)}
+                    placeholder="Attribute key"
+                    onFocus={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.add("visible")}
+                    onBlur={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.remove("visible")}
+                  />
+                </Tooltip>
+                <Tooltip text="Key-value pairs (e.g., phone: 1234567890)">
+                  <input
+                    type="text"
+                    value={attr.value}
+                    onChange={(e) => updateCustomAttribute(index, "value", e.target.value)}
+                    placeholder="Attribute value"
+                    onFocus={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.add("visible")}
+                    onBlur={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.remove("visible")}
+                  />
+                </Tooltip>
               </div>
             ))}
             <button type="button" onClick={addCustomAttribute}>
@@ -316,6 +436,7 @@ export default function IdentityForm() {
               {showHistory ? "Hide History" : "Show History"}
             </button>
             <button onClick={handleExport}>Export Identities</button>
+            <button onClick={handleExportKey}>Export Key</button>
             <input
               type="file"
               accept=".json"
@@ -380,6 +501,22 @@ export default function IdentityForm() {
           </div>
         )}
       </div>
+
+      {showDeleteConfirm && (
+        <div className="delete-confirm-overlay">
+          <div className="delete-confirm-dialog">
+            <p>Are you sure you want to delete this identity?</p>
+            <div className="delete-confirm-buttons">
+              <button className="confirm-btn" onClick={confirmDelete}>
+                Confirm
+              </button>
+              <button className="cancel-btn" onClick={cancelDelete}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

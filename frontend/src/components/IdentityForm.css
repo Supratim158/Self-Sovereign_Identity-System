@@ -36,7 +36,8 @@ body {
   margin: 0 0 0 1rem;
 }
 
-.tx-hash {
+.tx-hash,
+.wallet-address {
   font-size: 1.1rem;
   color: #f1f1f1;
   margin: 0.5rem 0 0 1rem;
@@ -118,7 +119,9 @@ body {
 .form-content button,
 .history-toggle-btn,
 .delete-btn,
-.edit-btn {
+.edit-btn,
+.confirm-btn,
+.cancel-btn {
   background: linear-gradient(135deg, #ff416c, #ff4b2b);
   color: white;
   padding: 0.9rem 1.5rem;
@@ -131,28 +134,41 @@ body {
 }
 
 .delete-btn {
-  background: linear-gradient(135deg, #ff4444, #cc0000);
+  background: linear-gradient(135deg, #ff0000, #cc0000);
   margin-left: 1rem;
 }
 
 .edit-btn {
-  background: linear-gradient(135deg, #2196F3, #1976D2);
+  background: linear-gradient(135deg, #2196f3, #1976d2);
   margin-left: 1rem;
+}
+
+.confirm-btn {
+  background: linear-gradient(135deg, #ff4444, #cc0000);
+  margin-right: 0.5rem;
+}
+
+.cancel-btn {
+  background: linear-gradient(135deg, #666, #444);
+  margin-left: 0.5rem;
 }
 
 .form-content button:hover,
 .history-toggle-btn:hover,
 .delete-btn:hover,
-.edit-btn:hover {
-  transform: translateY(-4px);
+.edit-btn:hover,
+.confirm-btn:hover,
+.cancel-btn:hover {
+  transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(255, 75, 43, 0.4);
 }
+
 .search-bar {
   margin-bottom: 1rem;
 }
 
 .search-bar input {
-  width: #fff;
+  width: 100%;
   padding: 0.9rem;
   font-size: 1rem;
   border-radius: 12px;
@@ -167,7 +183,7 @@ body {
 }
 
 .error-message {
-  color: #ff4040;
+  color: #ff4b2b;
   font-size: 1rem;
   text-align: center;
 }
@@ -222,8 +238,43 @@ body {
   align-items: center;
 }
 
+.delete-confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.delete-confirm-dialog {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  width: 90%;
+}
+
+.delete-confirm-dialog p {
+  font-size: 1.2rem;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.delete-confirm-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
 .loading-spinner {
-  border: 4px solid #f3f3;
+  border: 4px solid #f3f3f3;
   border-top: 4px solid #ff416c;
   border-radius: 50%;
   width: 40px;
@@ -240,6 +291,45 @@ body {
   100% { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
+.tooltip-container {
+  position: relative;
+  width: 100%;
+}
+
+.tooltip-text {
+  visibility: hidden;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  padding: 0.5rem;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.9rem;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.tooltip-text.visible {
+  visibility: visible;
+  opacity: 1;
+}
+
+.tooltip-text::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #333 transparent transparent transparent;
+}
+
 @media screen and (max-width: 768px) {
   .identity-form-container {
     grid-template-columns: 1fr;
@@ -253,7 +343,8 @@ body {
     margin: 0;
   }
 
-  .tx-hash {
+  .tx-hash,
+  .wallet-address {
     text-align: center;
     margin: 0.5rem 0;
   }
@@ -274,7 +365,9 @@ body {
   .form-content button,
   .history-toggle-btn,
   .delete-btn,
-  .edit-btn {
+  .edit-btn,
+  .confirm-btn,
+  .cancel-btn {
     width: 100%;
   }
 
@@ -284,5 +377,21 @@ body {
 
   .custom-attribute-group {
     flex-direction: column;
+  }
+
+  .delete-confirm-buttons {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .tooltip-text {
+    bottom: auto;
+    top: 125%;
+    transform: translateX(-50%);
+  }
+
+  .tooltip-text::after {
+    top: -10px;
+    border-color: transparent transparent #333 transparent;
   }
 }
