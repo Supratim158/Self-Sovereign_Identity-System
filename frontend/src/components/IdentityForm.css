@@ -40,6 +40,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  max-width: 100%;
 }
 
 .form-content {
@@ -180,6 +181,15 @@ body {
   flex-wrap: wrap;
   gap: 1rem;
   align-items: center;
+}
+
+.history-section li a {
+  color: #2bff88;
+  text-decoration: none;
+}
+
+.history-section li a:hover {
+  text-decoration: underline;
 }
 
 .loading-spinner {

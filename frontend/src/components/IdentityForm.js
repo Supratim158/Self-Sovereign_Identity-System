@@ -62,9 +62,9 @@ export default function IdentityForm() {
       });
 
       const tx = await contract.createIdentity(name, email, meta);
-      await tx.wait();
+      const receipt = await tx.wait();
 
-      setSuccess("Identity created successfully!");
+      setSuccess(`Identity created successfully! Tx Hash: ${receipt.hash}`);
       setHistory((prev) => [
         ...prev,
         {
@@ -74,6 +74,7 @@ export default function IdentityForm() {
           aadhar: encryptData(aadhar, encryptionKey),
           metadata: meta,
           status: Math.random() > 0.5 ? "Verified" : "Pending",
+          txHash: receipt.hash,
         },
       ]);
       resetForm();
@@ -305,7 +306,14 @@ export default function IdentityForm() {
                     <strong>Status:</strong>{" "}
                     <span className={`status-${item.status.toLowerCase()}`}>
                       {item.status}
-                    </span>
+                    </span> | <strong>Tx Hash:</strong>{" "}
+                    <a
+                      href={`https://etherscan.io/tx/${item.txHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {item.txHash ? item.txHash.slice(0, 6) + "..." : "N/A"}
+                    </a>
                     <button
                       className="delete-btn"
                       onClick={() => handleDelete(index)}
