@@ -446,3 +446,9 @@ body {
     gap: 0.5rem;
   }
 }
+.warning-message {
+  color: #e67e22; /* Orange to distinguish from error (red) and success (green) */
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0;
+}

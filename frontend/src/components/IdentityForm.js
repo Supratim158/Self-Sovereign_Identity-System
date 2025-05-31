@@ -46,7 +46,12 @@ export default function IdentityForm() {
   const [deleteIndex, setDeleteIndex] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
-  const [aadharValid, setAadharValid] = useState(null); // State for real-time validation
+  const [aadharValid, setAadharValid] = useState(null);
+  const [aadharWarning, setAadharWarning] = useState("");
+  const [encryptionKeyWarning, setEncryptionKeyWarning] = useState("");
+
+  const AADHAR_LIMIT = 12;
+  const ENCRYPTION_KEY_LIMIT = 32;
 
   async function connectWallet() {
     if (!window.ethereum) {
@@ -165,7 +170,9 @@ export default function IdentityForm() {
     setEmailError("");
     setTxHash(null);
     setEditingIndex(null);
-    setAadharValid(null); // Reset validation state
+    setAadharValid(null);
+    setAadharWarning("");
+    setEncryptionKeyWarning("");
   }
 
   function toggleHistory() {
@@ -272,7 +279,8 @@ export default function IdentityForm() {
       Object.entries(custom).map(([key, value]) => ({ key, value }))
     );
     setEditingIndex(index);
-    setAadharValid(aadhar ? validateAadhar(aadhar) : null); // Set initial validation state
+    setAadharValid(aadhar ? validateAadhar(aadhar) : null);
+    setAadharWarning(aadhar.length >= AADHAR_LIMIT - 2 ? `Approaching ${AADHAR_LIMIT}-character limit (${aadhar.length}/${AADHAR_LIMIT})` : "");
   }
 
   function addCustomAttribute() {
@@ -333,8 +341,8 @@ export default function IdentityForm() {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter your name"
                 required
-                onFocus={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.add("visible")}
-                onBlur={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.remove("visible")}
+                onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
+                onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
               />
             </Tooltip>
           </div>
@@ -356,8 +364,8 @@ export default function IdentityForm() {
                 }}
                 placeholder="Enter your email"
                 required
-                onFocus={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.add("visible")}
-                onBlur={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.remove("visible")}
+                onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
+                onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
               />
             </Tooltip>
             {emailError && <p className="error-message">{emailError}</p>}
@@ -372,8 +380,8 @@ export default function IdentityForm() {
                 value={dob}
                 onChange={(e) => setDob(e.target.value)}
                 required
-                onFocus={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.add("visible")}
-                onBlur={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.remove("visible")}
+                onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
+                onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
               />
             </Tooltip>
           </div>
@@ -389,16 +397,23 @@ export default function IdentityForm() {
                   onChange={(e) => {
                     const value = e.target.value;
                     setAadhar(value);
-                    setAadharValid(value ? validateAadhar(value) : null); // Real-time validation
+                    setAadharValid(value ? validateAadhar(value) : null);
                     setAadharError(validateAadhar(value) ? "" : "Invalid Aadhar number");
+                    setAadharWarning(
+                      value.length >= AADHAR_LIMIT - 2
+                        ? `Approaching ${AADHAR_LIMIT}-character limit (${value.length}/${AADHAR_LIMIT})`
+                        : value.length > AADHAR_LIMIT
+                        ? `Exceeded ${AADHAR_LIMIT}-character limit`
+                        : ""
+                    );
                   }}
                   placeholder="Enter your Aadhar number"
                   required
-                  maxLength={12}
+                  maxLength={AADHAR_LIMIT}
                   pattern="\d{12}"
                   title="Aadhar number must be exactly 12 digits"
-                  onFocus={(e) => e.target.parentElement.parentElement.querySelector(".tooltip-text").classList.add("visible")}
-                  onBlur={(e) => e.target.parentElement.parentElement.querySelector(".tooltip-text").classList.remove("visible")}
+                  onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
+                  onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
                 />
                 {aadharValid !== null && (
                   <span className="validation-indicator">
@@ -408,22 +423,37 @@ export default function IdentityForm() {
               </div>
             </Tooltip>
             {aadharError && <p className="error-message">{aadharError}</p>}
+            {aadharWarning && <p className="warning-message">{aadharWarning}</p>}
           </div>
 
           <div className="input-group">
             <label htmlFor="encryptionKey">Encryption Key*</label>
-            <Tooltip text="Enter a secure key for encryption">
-              <input
-                id="encryptionKey"
-                type="text"
-                value={encryptionKey}
-                onChange={(e) => setEncryptionKey(e.target.value)}
-                placeholder="Enter encryption key"
-                required
-                onFocus={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.add("visible")}
-                onBlur={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.remove("visible")}
-              />
+            <Tooltip text="Enter a secure key for encryption (max 32 characters)">
+              <div className="input-validation-container">
+                <input
+                  id="encryptionKey"
+                  type="text"
+                  value={encryptionKey}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setEncryptionKey(value);
+                    setEncryptionKeyWarning(
+                      value.length >= ENCRYPTION_KEY_LIMIT - 2
+                        ? `Approaching ${ENCRYPTION_KEY_LIMIT}-character limit (${value.length}/${ENCRYPTION_KEY_LIMIT})`
+                        : value.length > ENCRYPTION_KEY_LIMIT
+                        ? `Exceeded ${ENCRYPTION_KEY_LIMIT}-character limit`
+                        : ""
+                    );
+                  }}
+                  placeholder="Enter encryption key"
+                  required
+                  maxLength={ENCRYPTION_KEY_LIMIT}
+                  onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
+                  onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
+                />
+              </div>
             </Tooltip>
+            {encryptionKeyWarning && <p className="warning-message">{encryptionKeyWarning}</p>}
           </div>
 
           <div className="input-group">
@@ -435,8 +465,8 @@ export default function IdentityForm() {
                 value={metadata}
                 onChange={(e) => setMetadata(e.target.value)}
                 placeholder="Additional metadata (optional)"
-                onFocus={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.add("visible")}
-                onBlur={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.remove("visible")}
+                onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
+                onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
               />
             </Tooltip>
           </div>
@@ -451,8 +481,8 @@ export default function IdentityForm() {
                     value={attr.key}
                     onChange={(e) => updateCustomAttribute(index, "key", e.target.value)}
                     placeholder="Attribute key"
-                    onFocus={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.add("visible")}
-                    onBlur={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.remove("visible")}
+                    onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
+                    onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
                   />
                 </Tooltip>
                 <Tooltip text="Key-value pairs (e.g., phone: 1234567890)">
@@ -461,8 +491,8 @@ export default function IdentityForm() {
                     value={attr.value}
                     onChange={(e) => updateCustomAttribute(index, "value", e.target.value)}
                     placeholder="Attribute value"
-                    onFocus={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.add("visible")}
-                    onBlur={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.remove("visible")}
+                    onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
+                    onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
                   />
                 </Tooltip>
               </div>
