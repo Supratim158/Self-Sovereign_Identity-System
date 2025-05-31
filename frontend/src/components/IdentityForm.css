@@ -85,7 +85,7 @@ body {
 }
 
 .input-group input {
-  padding: 0.9rem 1.2rem;
+  padding: 0.9rem 3rem 0.9rem 1.2rem; /* Adjusted padding: left for text, right for toggle icon */
   font-size: 1.1rem;
   border-radius: 12px;
   border: none;
@@ -93,10 +93,35 @@ body {
   background: #fefefe;
   color: #333;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .input-group input::placeholder {
   color: #aaa;
+}
+
+.input-with-toggle {
+  position: relative;
+  width: 100%;
+}
+
+.toggle-visibility {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #ff416c;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.toggle-visibility:hover {
+  color: #ff4b2b;
 }
 
 .custom-attribute-group {

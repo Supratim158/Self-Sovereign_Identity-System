@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import contractABI from "../utils/IdentitySystemABI.json";
-import { validateAadhar, encryptData, decryptData } from "../utils/cryptoUtils";
+import { validateAadhar, encryptData, decryptData } from "../utils/cryptoUtils.js";
 import "./IdentityForm.css";
 
 const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
@@ -46,6 +46,7 @@ export default function IdentityForm() {
   const [deleteIndex, setDeleteIndex] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+  const [aadharValid, setAadharValid] = useState(null); // State for real-time validation
 
   async function connectWallet() {
     if (!window.ethereum) {
@@ -164,6 +165,7 @@ export default function IdentityForm() {
     setEmailError("");
     setTxHash(null);
     setEditingIndex(null);
+    setAadharValid(null); // Reset validation state
   }
 
   function toggleHistory() {
@@ -270,6 +272,7 @@ export default function IdentityForm() {
       Object.entries(custom).map(([key, value]) => ({ key, value }))
     );
     setEditingIndex(index);
+    setAadharValid(aadhar ? validateAadhar(aadhar) : null); // Set initial validation state
   }
 
   function addCustomAttribute() {
@@ -378,22 +381,31 @@ export default function IdentityForm() {
           <div className="input-group">
             <label htmlFor="aadhar">Aadhar Number*</label>
             <Tooltip text="Enter 12-digit Aadhar number (e.g., 123456789012)">
-              <input
-                id="aadhar"
-                type="password"
-                value={aadhar}
-                onChange={(e) => {
-                  setAadhar(e.target.value);
-                  setAadharError(validateAadhar(e.target.value) ? "" : "Invalid Aadhar number");
-                }}
-                placeholder="Enter your Aadhar number"
-                required
-                maxLength={12}
-                pattern="\d{12}"
-                title="Aadhar number must be exactly 12 digits"
-                onFocus={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.add("visible")}
-                onBlur={(e) => e.target.parentElement.querySelector(".tooltip-text").classList.remove("visible")}
-              />
+              <div className="input-validation-container">
+                <input
+                  id="aadhar"
+                  type="password"
+                  value={aadhar}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setAadhar(value);
+                    setAadharValid(value ? validateAadhar(value) : null); // Real-time validation
+                    setAadharError(validateAadhar(value) ? "" : "Invalid Aadhar number");
+                  }}
+                  placeholder="Enter your Aadhar number"
+                  required
+                  maxLength={12}
+                  pattern="\d{12}"
+                  title="Aadhar number must be exactly 12 digits"
+                  onFocus={(e) => e.target.parentElement.parentElement.querySelector(".tooltip-text").classList.add("visible")}
+                  onBlur={(e) => e.target.parentElement.parentElement.querySelector(".tooltip-text").classList.remove("visible")}
+                />
+                {aadharValid !== null && (
+                  <span className="validation-indicator">
+                    {aadharValid ? "✅" : "❌"}
+                  </span>
+                )}
+              </div>
             </Tooltip>
             {aadharError && <p className="error-message">{aadharError}</p>}
           </div>
@@ -403,7 +415,7 @@ export default function IdentityForm() {
             <Tooltip text="Enter a secure key for encryption">
               <input
                 id="encryptionKey"
-                type="password"
+                type="text"
                 value={encryptionKey}
                 onChange={(e) => setEncryptionKey(e.target.value)}
                 placeholder="Enter encryption key"
