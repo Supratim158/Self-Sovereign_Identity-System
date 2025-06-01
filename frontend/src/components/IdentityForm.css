@@ -1,3 +1,4 @@
+/* Existing styles from Commit 19 */
 body {
   background: linear-gradient(135deg, #1d1b31, #3a1c71, #d76d77, #ffaf7b);
   background-size: 400% 400%;
@@ -22,13 +23,13 @@ body {
 }
 
 .left {
-  position: fixed; /* Fix the left div to the screen */
-  left: 0; /* Align to the leftmost edge */
-  top: 0; /* Start from the top of the viewport */
-  width: 300px; /* Fixed width for the left column; adjust as needed */
-  margin: 200px ; /* Increased top padding to match container and ensure content is visible */
-  z-index: 10; /* Ensure it stays above other content */
-  min-height: 100vh; /* Ensure it spans the viewport height */
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 300px;
+  margin: 200px;
+  z-index: 10;
+  min-height: 100vh;
 }
 
 .identity-form-container h2 {
@@ -59,8 +60,8 @@ body {
 }
 
 .right {
-  margin-left: 220px; /* Offset by the width of .left (300px + 1rem padding, assuming 1rem = 16px) */
-  width: calc(100%); /* Take up remaining space after the offset */
+  margin-left: 220px;
+  width: calc(100%);
   display: flex;
   flex-direction: column;
   gap: 2rem;
@@ -71,7 +72,7 @@ body {
   flex-direction: column;
   gap: 2rem;
   width: 100%;
-  max-width: 800px; /* Increased from 600px to use more space */
+  max-width: 800px;
 }
 
 .form-content {
@@ -232,6 +233,9 @@ body {
   color: #ff4b2b;
   font-size: 1rem;
   text-align: center;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.5rem;
+  border-radius: 6px;
 }
 
 .success-message {
@@ -254,7 +258,7 @@ body {
   padding: 1.5rem 2rem;
   color: white;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-  max-width: 900px; /* Increased from 700px to use more space */
+  max-width: 900px;
   width: 100%;
 }
 
@@ -397,14 +401,14 @@ body {
   }
 
   .left {
-    position: static; /* Remove fixed positioning on mobile */
-    width: 100%; /* Full width on smaller screens */
+    position: static;
+    width: 100%;
     padding: 0;
   }
 
   .right {
-    margin-left: 0; /* Remove offset on mobile */
-    width: 100%; /* Full width */
+    margin-left: 0;
+    width: 100%;
   }
 
   .identity-form-container h2 {
@@ -477,4 +481,68 @@ body {
   font-size: 0.9rem;
   margin-top: 0.25rem;
   margin-bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.5rem;
+  border-radius: 6px;
+}
+
+.input-group input:focus,
+.form-content button:focus,
+.history-toggle-btn:focus,
+.delete-btn:focus,
+.edit-btn:focus,
+.confirm-btn:focus,
+.cancel-btn:focus,
+.pagination-btn:focus,
+.search-bar input:focus {
+  outline: 3px solid #2bff88;
+  outline-offset: 2px;
+  box-shadow: 0 0 8px rgba(43, 255, 136, 0.5);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.validation-indicator {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  line-height: 1;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.2rem;
+  border-radius: 50%;
+}
+
+/* New styles for Commit 20 */
+.csv-export-btn {
+  background: linear-gradient(135deg, #4caf50, #388e3c); /* Green gradient for CSV export */
+  color: white;
+  padding: 0.9rem 1.5rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.csv-export-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+.csv-export-btn:focus {
+  /* outline: 3px solid #2bff88; */
+  outline-offset: 2px;
+  box-shadow: 0 0 8px rgba(43, 255, 136, 0.5);
 }

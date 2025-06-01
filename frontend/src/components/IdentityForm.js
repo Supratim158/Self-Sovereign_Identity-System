@@ -14,12 +14,12 @@ function Tooltip({ text, children }) {
       {children}
       <span
         className={`tooltip-text ${isVisible ? "visible" : ""}`}
-        id={`tooltip-${children.props.id}`} // Unique ID for ARIA
+        id={`tooltip-${children.props.id}`}
         role="tooltip"
         onMouseEnter={() => setIsVisible(true)}
         onMouseLeave={() => setIsVisible(false)}
-        onFocus={() => setIsVisible(true)} // Keyboard focus support
-        onBlur={() => setIsVisible(false)} // Keyboard blur support
+        onFocus={() => setIsVisible(true)}
+        onBlur={() => setIsVisible(false)}
       >
         {text}
       </span>
@@ -211,6 +211,42 @@ export default function IdentityForm() {
     setSuccess("Encryption key exported successfully!");
   }
 
+  function handleExportCSV() {
+    if (!history.length) {
+      setError("No history to export");
+      return;
+    }
+    const headers = ["Name", "Email", "DOB", "Aadhar", "Metadata", "Status", "Transaction Hash"];
+    const escapeCSV = (value) => `"${String(value).replace(/"/g, '""')}"`;
+    const rows = history.map((item) => [
+      escapeCSV(item.name),
+      escapeCSV(item.email),
+      escapeCSV(item.dob),
+      escapeCSV(
+        encryptionKey && decryptData(item.aadhar, encryptionKey)
+          ? decryptData(item.aadhar, encryptionKey)
+          : "Encrypted"
+      ),
+      escapeCSV(item.metadata),
+      escapeCSV(item.status),
+      escapeCSV(item.txHash),
+    ]);
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) => row.join(",")),
+    ].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "identities.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setSuccess("History exported to CSV successfully!");
+  }
+
   function handleImport(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -312,6 +348,7 @@ export default function IdentityForm() {
       item.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Moved totalPages declaration before its use
   const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedHistory = filteredHistory.slice(startIndex, startIndex + itemsPerPage);
@@ -324,7 +361,7 @@ export default function IdentityForm() {
     <div className="identity-form-container">
       {loading && <div className="loading-spinner" role="status" aria-label="Loading"></div>}
       <div className="left">
-        <h2 className="form-heading">Self-Sovereign Identity Form</h2>
+        <h2 id="identity-form-heading" className="form-heading">Self-Sovereign Identity Form</h2>
         {txHash && (
           <p className="tx-hash">
             Transaction Hash:{" "}
@@ -332,7 +369,7 @@ export default function IdentityForm() {
               href={`https://etherscan.io/tx/${txHash}`}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={`View transaction ${txHash} on Etherscan`}
+              aria-label={"View transaction " + txHash + " on Etherscan"}
             >
               {txHash.slice(0, 6)}...
             </a>
@@ -567,6 +604,14 @@ export default function IdentityForm() {
                 aria-label="Export identities to JSON"
               >
                 Export Identities
+              </button>
+              <button
+                type="button"
+                onClick={handleExportCSV}
+                aria-label="Export identities to CSV"
+                className="csv-export-btn"
+              >
+                Export to CSV
               </button>
               <button
                 type="button"
