@@ -14,8 +14,12 @@ function Tooltip({ text, children }) {
       {children}
       <span
         className={`tooltip-text ${isVisible ? "visible" : ""}`}
+        id={`tooltip-${children.props.id}`} // Unique ID for ARIA
+        role="tooltip"
         onMouseEnter={() => setIsVisible(true)}
         onMouseLeave={() => setIsVisible(false)}
+        onFocus={() => setIsVisible(true)} // Keyboard focus support
+        onBlur={() => setIsVisible(false)} // Keyboard blur support
       >
         {text}
       </span>
@@ -214,7 +218,10 @@ export default function IdentityForm() {
     reader.onload = (event) => {
       try {
         const imported = JSON.parse(event.target.result);
-        if (Array.isArray(imported) && imported.every(item => item.name && item.email && item.dob && item.aadhar && item.metadata)) {
+        if (
+          Array.isArray(imported) &&
+          imported.every((item) => item.name && item.email && item.dob && item.aadhar && item.metadata)
+        ) {
           setHistory(imported);
           setSuccess("Identities imported successfully!");
         } else {
@@ -272,15 +279,21 @@ export default function IdentityForm() {
     setName(item.name);
     setEmail(item.email);
     setDob(item.dob);
-    setAadhar(encryptionKey && decryptData(item.aadhar, encryptionKey) ? decryptData(item.aadhar, encryptionKey) : "");
+    setAadhar(
+      encryptionKey && decryptData(item.aadhar, encryptionKey)
+        ? decryptData(item.aadhar, encryptionKey)
+        : ""
+    );
     setMetadata(JSON.parse(item.metadata).additional || "");
     const custom = JSON.parse(item.metadata).custom || {};
-    setCustomAttributes(
-      Object.entries(custom).map(([key, value]) => ({ key, value }))
-    );
+    setCustomAttributes(Object.entries(custom).map(([key, value]) => ({ key, value })));
     setEditingIndex(index);
     setAadharValid(aadhar ? validateAadhar(aadhar) : null);
-    setAadharWarning(aadhar.length >= AADHAR_LIMIT - 2 ? `Approaching ${AADHAR_LIMIT}-character limit (${aadhar.length}/${AADHAR_LIMIT})` : "");
+    setAadharWarning(
+      aadhar.length >= AADHAR_LIMIT - 2
+        ? `Approaching ${AADHAR_LIMIT}-character limit (${aadhar.length}/${AADHAR_LIMIT})`
+        : ""
+    );
   }
 
   function addCustomAttribute() {
@@ -309,316 +322,386 @@ export default function IdentityForm() {
 
   return (
     <div className="identity-form-container">
-      {loading && <div className="loading-spinner"></div>}
-      <h2 className="form-heading">Self-Sovereign Identity Form</h2>
-      {txHash && (
-        <p className="tx-hash">
-          Transaction Hash:{" "}
-          <a
-            href={`https://etherscan.io/tx/${txHash}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {txHash.slice(0, 6)}...
-          </a>
-        </p>
-      )}
-      {walletAddress && (
-        <p className="wallet-address">
-          Connected Wallet: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
-        </p>
-      )}
-
-      <div className="form-wrapper">
-        <div className="form-content">
-          <div className="input-group">
-            <label htmlFor="name">Name*</label>
-            <Tooltip text="Enter your full name (e.g., John Doe)">
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your name"
-                required
-                onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
-                onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
-              />
-            </Tooltip>
-          </div>
-
-          <div className="input-group">
-            <label htmlFor="email">Email*</label>
-            <Tooltip text="Enter a valid email (e.g., user@example.com)">
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setEmailError(
-                    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.target.value)
-                      ? ""
-                      : "Invalid email format"
-                  );
-                }}
-                placeholder="Enter your email"
-                required
-                onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
-                onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
-              />
-            </Tooltip>
-            {emailError && <p className="error-message">{emailError}</p>}
-          </div>
-
-          <div className="input-group">
-            <label htmlFor="dob">Date of Birth*</label>
-            <Tooltip text="Select your date of birth (YYYY-MM-DD)">
-              <input
-                id="dob"
-                type="date"
-                value={dob}
-                onChange={(e) => setDob(e.target.value)}
-                required
-                onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
-                onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
-              />
-            </Tooltip>
-          </div>
-
-          <div className="input-group">
-            <label htmlFor="aadhar">Aadhar Number*</label>
-            <Tooltip text="Enter 12-digit Aadhar number (e.g., 123456789012)">
-              <div className="input-validation-container">
-                <input
-                  id="aadhar"
-                  type="password"
-                  value={aadhar}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setAadhar(value);
-                    setAadharValid(value ? validateAadhar(value) : null);
-                    setAadharError(validateAadhar(value) ? "" : "Invalid Aadhar number");
-                    setAadharWarning(
-                      value.length >= AADHAR_LIMIT - 2
-                        ? `Approaching ${AADHAR_LIMIT}-character limit (${value.length}/${AADHAR_LIMIT})`
-                        : value.length > AADHAR_LIMIT
-                        ? `Exceeded ${AADHAR_LIMIT}-character limit`
-                        : ""
-                    );
-                  }}
-                  placeholder="Enter your Aadhar number"
-                  required
-                  maxLength={AADHAR_LIMIT}
-                  pattern="\d{12}"
-                  title="Aadhar number must be exactly 12 digits"
-                  onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
-                  onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
-                />
-                {aadharValid !== null && (
-                  <span className="validation-indicator">
-                    {aadharValid ? "✅" : "❌"}
-                  </span>
-                )}
-              </div>
-            </Tooltip>
-            {aadharError && <p className="error-message">{aadharError}</p>}
-            {aadharWarning && <p className="warning-message">{aadharWarning}</p>}
-          </div>
-
-          <div className="input-group">
-            <label htmlFor="encryptionKey">Encryption Key*</label>
-            <Tooltip text="Enter a secure key for encryption (max 32 characters)">
-              <div className="input-validation-container">
-                <input
-                  id="encryptionKey"
-                  type="text"
-                  value={encryptionKey}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setEncryptionKey(value);
-                    setEncryptionKeyWarning(
-                      value.length >= ENCRYPTION_KEY_LIMIT - 2
-                        ? `Approaching ${ENCRYPTION_KEY_LIMIT}-character limit (${value.length}/${ENCRYPTION_KEY_LIMIT})`
-                        : value.length > ENCRYPTION_KEY_LIMIT
-                        ? `Exceeded ${ENCRYPTION_KEY_LIMIT}-character limit`
-                        : ""
-                    );
-                  }}
-                  placeholder="Enter encryption key"
-                  required
-                  maxLength={ENCRYPTION_KEY_LIMIT}
-                  onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
-                  onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
-                />
-              </div>
-            </Tooltip>
-            {encryptionKeyWarning && <p className="warning-message">{encryptionKeyWarning}</p>}
-          </div>
-
-          <div className="input-group">
-            <label htmlFor="metadata">Metadata</label>
-            <Tooltip text="Optional: Additional info (e.g., address)">
-              <input
-                id="metadata"
-                type="text"
-                value={metadata}
-                onChange={(e) => setMetadata(e.target.value)}
-                placeholder="Additional metadata (optional)"
-                onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
-                onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
-              />
-            </Tooltip>
-          </div>
-
-          <div className="input-group">
-            <label>Custom Attributes</label>
-            {customAttributes.map((attr, index) => (
-              <div key={index} className="custom-attribute-group">
-                <Tooltip text="Key-value pairs (e.g., phone: 1234567890)">
-                  <input
-                    type="text"
-                    value={attr.key}
-                    onChange={(e) => updateCustomAttribute(index, "key", e.target.value)}
-                    placeholder="Attribute key"
-                    onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
-                    onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
-                  />
-                </Tooltip>
-                <Tooltip text="Key-value pairs (e.g., phone: 1234567890)">
-                  <input
-                    type="text"
-                    value={attr.value}
-                    onChange={(e) => updateCustomAttribute(index, "value", e.target.value)}
-                    placeholder="Attribute value"
-                    onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
-                    onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
-                  />
-                </Tooltip>
-              </div>
-            ))}
-            <button type="button" onClick={addCustomAttribute}>
-              Add Attribute
-            </button>
-          </div>
-
-          <div className="button-group">
-            <button onClick={createIdentity} disabled={loading}>
-              {loading ? "Submitting..." : editingIndex !== null ? "Update Identity" : "Create Identity"}
-            </button>
-            <button onClick={resetForm}>Reset Form</button>
-            <button className="history-toggle-btn" onClick={toggleHistory}>
-              {showHistory ? "Hide History" : "Show History"}
-            </button>
-            <button onClick={handleExport}>Export Identities</button>
-            <button onClick={handleExportKey}>Export Key</button>
-            <button
-              onClick={() => document.getElementById("import-key-input").click()}
+      {loading && <div className="loading-spinner" role="status" aria-label="Loading"></div>}
+      <div className="left">
+        <h2 className="form-heading">Self-Sovereign Identity Form</h2>
+        {txHash && (
+          <p className="tx-hash">
+            Transaction Hash:{" "}
+            <a
+              href={`https://etherscan.io/tx/${txHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`View transaction ${txHash} on Etherscan`}
             >
-              Import Key
-            </button>
-            <input
-              type="file"
-              accept=".json"
-              onChange={handleImportKey}
-              style={{ display: "none" }}
-              id="import-key-input"
-            />
-            <input
-              type="file"
-              accept=".json"
-              onChange={handleImport}
-              style={{ display: "none" }}
-              id="import-input"
-            />
-            <button
-              onClick={() => document.getElementById("import-input").click()}
-            >
-              Import Identities
-            </button>
-          </div>
-
-          {error && <p className="error-message">{error}</p>}
-          {success && <p className="success-message">{success}</p>}
-        </div>
-
-        {showHistory && (
-          <div className="history-section">
-            <h3>Identity History</h3>
-            <div className="search-bar">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by name or email"
-              />
-            </div>
-            <ul>
-              {paginatedHistory.length > 0 ? (
-                paginatedHistory.map((item, index) => (
-                  <li key={startIndex + index}>
-                    <strong>Name:</strong> {item.name} | <strong>Email:</strong>{" "}
-                    {item.email} | <strong>DOB:</strong> {item.dob} |{" "}
-                    <strong>Aadhar:</strong>{" "}
-                    {encryptionKey && decryptData(item.aadhar, encryptionKey)
-                      ? decryptData(item.aadhar, encryptionKey)
-                      : "Encrypted"} | <strong>Metadata:</strong> {item.metadata} |{" "}
-                    <strong>Status:</strong>{" "}
-                    <span className={`status-${item.status.toLowerCase()}`}>
-                      {item.status}
-                    </span>
-                    <button
-                      className="edit-btn"
-                      onClick={() => handleEdit(startIndex + index)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="delete-btn"
-                      onClick={() => handleDelete(startIndex + index)}
-                    >
-                      Delete
-                    </button>
-                  </li>
-                ))
-              ) : (
-                <li>No history found</li>
-              )}
-            </ul>
-            {totalPages > 1 && (
-              <div className="pagination-controls">
-                <button
-                  className="pagination-btn"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </button>
-                <span className="pagination-info">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <button
-                  className="pagination-btn"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                </button>
-              </div>
-            )}
-          </div>
+              {txHash.slice(0, 6)}...
+            </a>
+          </p>
         )}
+        {walletAddress && (
+          <p className="wallet-address" aria-live="polite">
+            Connected Wallet: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+          </p>
+        )}
+      </div>
+      <div className="right">
+        <div className="form-wrapper">
+          <form className="form-content" onSubmit={(e) => { e.preventDefault(); createIdentity(); }}>
+            <div className="input-group">
+              <label htmlFor="name">Name*</label>
+              <Tooltip text="Enter your full name (e.g., John Doe)">
+                <input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your name"
+                  required
+                  aria-describedby="tooltip-name"
+                  onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
+                  onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
+                />
+              </Tooltip>
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="email">Email*</label>
+              <Tooltip text="Enter a valid email (e.g., user@example.com)">
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setEmailError(
+                      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.target.value) ? "" : "Invalid email format"
+                    );
+                  }}
+                  placeholder="Enter your email"
+                  required
+                  aria-describedby="tooltip-email"
+                  aria-invalid={!!emailError}
+                  aria-errormessage="email-error"
+                  onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
+                  onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
+                />
+              </Tooltip>
+              {emailError && <p id="email-error" className="error-message">{emailError}</p>}
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="dob">Date of Birth*</label>
+              <Tooltip text="Select your date of birth (YYYY-MM-DD)">
+                <input
+                  id="dob"
+                  type="date"
+                  value={dob}
+                  onChange={(e) => setDob(e.target.value)}
+                  required
+                  aria-describedby="tooltip-dob"
+                  onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
+                  onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
+                />
+              </Tooltip>
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="aadhar">Aadhar Number*</label>
+              <Tooltip text="Enter 12-digit Aadhar number (e.g., 123456789012)">
+                <div className="input-validation-container">
+                  <input
+                    id="aadhar"
+                    type="password"
+                    value={aadhar}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setAadhar(value);
+                      setAadharValid(value ? validateAadhar(value) : null);
+                      setAadharError(validateAadhar(value) ? "" : "Invalid Aadhar number");
+                      setAadharWarning(
+                        value.length >= AADHAR_LIMIT - 2
+                          ? `Approaching ${AADHAR_LIMIT}-character limit (${value.length}/${AADHAR_LIMIT})`
+                          : value.length > AADHAR_LIMIT
+                          ? `Exceeded ${AADHAR_LIMIT}-character limit`
+                          : ""
+                      );
+                    }}
+                    placeholder="Enter your Aadhar number"
+                    required
+                    maxLength={AADHAR_LIMIT}
+                    pattern="\d{12}"
+                    title="Aadhar number must be exactly 12 digits"
+                    aria-describedby="tooltip-aadhar aadhar-warning"
+                    aria-invalid={!!aadharError}
+                    aria-errormessage="aadhar-error"
+                    onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
+                    onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
+                  />
+                  {aadharValid !== null && (
+                    <span
+                      className="validation-indicator"
+                      aria-hidden="true"
+                    >
+                      {aadharValid ? "✅" : "❌"}
+                    </span>
+                  )}
+                </div>
+              </Tooltip>
+              {aadharError && <p id="aadhar-error" className="error-message">{aadharError}</p>}
+              {aadharWarning && <p id="aadhar-warning" className="warning-message">{aadharWarning}</p>}
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="encryptionKey">Encryption Key*</label>
+              <Tooltip text="Enter a secure key for encryption (max 32 characters)">
+                <div className="input-validation-container">
+                  <input
+                    id="encryptionKey"
+                    type="text"
+                    value={encryptionKey}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setEncryptionKey(value);
+                      setEncryptionKeyWarning(
+                        value.length >= ENCRYPTION_KEY_LIMIT - 2
+                          ? `Approaching ${ENCRYPTION_KEY_LIMIT}-character limit (${value.length}/${ENCRYPTION_KEY_LIMIT})`
+                          : value.length > ENCRYPTION_KEY_LIMIT
+                          ? `Exceeded ${ENCRYPTION_KEY_LIMIT}-character limit`
+                          : ""
+                      );
+                    }}
+                    placeholder="Enter encryption key"
+                    required
+                    maxLength={ENCRYPTION_KEY_LIMIT}
+                    aria-describedby="tooltip-encryptionKey encryptionkey-warning"
+                    onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
+                    onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
+                  />
+                </div>
+              </Tooltip>
+              {encryptionKeyWarning && <p id="encryptionkey-warning" className="warning-message">{encryptionKeyWarning}</p>}
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="metadata">Metadata</label>
+              <Tooltip text="Optional: Additional info (e.g., address)">
+                <input
+                  id="metadata"
+                  type="text"
+                  value={metadata}
+                  onChange={(e) => setMetadata(e.target.value)}
+                  placeholder="Additional metadata (optional)"
+                  aria-describedby="tooltip-metadata"
+                  onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
+                  onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
+                />
+              </Tooltip>
+            </div>
+
+            <div className="input-group">
+              <label id="custom-attributes-label">Custom Attributes</label>
+              {customAttributes.map((attr, index) => (
+                <div key={index} className="custom-attribute-group" aria-labelledby="custom-attributes-label">
+                  <Tooltip text="Key-value pairs (e.g., phone: 1234567890)">
+                    <input
+                      type="text"
+                      value={attr.key}
+                      onChange={(e) => updateCustomAttribute(index, "key", e.target.value)}
+                      placeholder="Attribute key"
+                      aria-describedby={`tooltip-custom-key-${index}`}
+                      onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
+                      onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
+                      id={`custom-key-${index}`}
+                    />
+                  </Tooltip>
+                  <Tooltip text="Key-value pairs (e.g., phone: 1234567890)">
+                    <input
+                      type="text"
+                      value={attr.value}
+                      onChange={(e) => updateCustomAttribute(index, "value", e.target.value)}
+                      placeholder="Attribute value"
+                      aria-describedby={`tooltip-custom-value-${index}`}
+                      onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
+                      onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
+                      id={`custom-value-${index}`}
+                    />
+                  </Tooltip>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addCustomAttribute}
+                aria-label="Add new custom attribute"
+              >
+                Add Attribute
+              </button>
+            </div>
+
+            <div className="button-group">
+              <button
+                type="submit"
+                disabled={loading}
+                aria-label={editingIndex !== null ? "Update identity" : "Create identity"}
+              >
+                {loading ? "Submitting..." : editingIndex !== null ? "Update Identity" : "Create Identity"}
+              </button>
+              <button
+                type="button"
+                onClick={resetForm}
+                aria-label="Reset form"
+              >
+                Reset Form
+              </button>
+              <button
+                type="button"
+                className="history-toggle-btn"
+                onClick={toggleHistory}
+                aria-expanded={showHistory}
+                aria-controls="history-section"
+              >
+                {showHistory ? "Hide History" : "Show History"}
+              </button>
+              <button
+                type="button"
+                onClick={handleExport}
+                aria-label="Export identities to JSON"
+              >
+                Export Identities
+              </button>
+              <button
+                type="button"
+                onClick={handleExportKey}
+                aria-label="Export encryption key"
+              >
+                Export Key
+              </button>
+              <label htmlFor="import-key-input" className="sr-only">Import encryption key</label>
+              <button
+                type="button"
+                onClick={() => document.getElementById("import-key-input").click()}
+                aria-label="Import encryption key"
+              >
+                Import Key
+              </button>
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleImportKey}
+                style={{ display: "none" }}
+                id="import-key-input"
+                aria-hidden="true"
+              />
+              <label htmlFor="import-input" className="sr-only">Import identities</label>
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleImport}
+                style={{ display: "none" }}
+                id="import-input"
+                aria-hidden="true"
+              />
+              <button
+                type="button"
+                onClick={() => document.getElementById("import-input").click()}
+                aria-label="Import identities from JSON"
+              >
+                Import Identities
+              </button>
+            </div>
+
+            {error && <p id="form-error" className="error-message" role="alert">{error}</p>}
+            {success && <p id="form-success" className="success-message" role="alert">{success}</p>}
+          </form>
+
+          {showHistory && (
+            <section className="history-section" id="history-section" aria-labelledby="history-heading">
+              <h3 id="history-heading">Identity History</h3>
+              <div className="search-bar">
+                <label htmlFor="search-history" className="sr-only">Search identities by name or email</label>
+                <input
+                  id="search-history"
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search by name or email"
+                  aria-describedby="search-instructions"
+                />
+                <span id="search-instructions" className="sr-only">
+                  Enter a name or email to filter the identity history list.
+                </span>
+              </div>
+              <ul aria-label="Identity history list">
+                {paginatedHistory.length > 0 ? (
+                  paginatedHistory.map((item, index) => (
+                    <li key={startIndex + index} aria-label={`Identity ${item.name}`}>
+                      <strong>Name:</strong> {item.name} | <strong>Email:</strong> {item.email} | 
+                      <strong>DOB:</strong> {item.dob} | <strong>Aadhar:</strong> 
+                      {encryptionKey && decryptData(item.aadhar, encryptionKey)
+                        ? decryptData(item.aadhar, encryptionKey)
+                        : "Encrypted"} | <strong>Metadata:</strong> {item.metadata} | 
+                      <strong>Status:</strong> 
+                      <span className={`status-${item.status.toLowerCase()}`}>
+                        {item.status}
+                      </span>
+                      <button
+                        className="edit-btn"
+                        onClick={() => handleEdit(startIndex + index)}
+                        aria-label={`Edit identity for ${item.name}`}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="delete-btn"
+                        onClick={() => handleDelete(startIndex + index)}
+                        aria-label={`Delete identity for ${item.name}`}
+                      >
+                        Delete
+                      </button>
+                    </li>
+                  ))
+                ) : (
+                  <li>No history found</li>
+                )}
+              </ul>
+              {totalPages > 1 && (
+                <div className="pagination-controls" role="navigation" aria-label="History pagination">
+                  <button
+                    className="pagination-btn"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    aria-label="Previous page"
+                    aria-disabled={currentPage === 1}
+                  >
+                    Previous
+                  </button>
+                  <span className="pagination-info" aria-live="polite">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    className="pagination-btn"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    aria-label="Next page"
+                    aria-disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </section>
+          )}
+        </div>
       </div>
 
       {showDeleteConfirm && (
-        <div className="delete-confirm-overlay">
+        <div className="delete-confirm-overlay" role="dialog" aria-labelledby="delete-confirm-title">
           <div className="delete-confirm-dialog">
-            <p>Are you sure you want to delete this identity?</p>
+            <p id="delete-confirm-title">Are you sure you want to delete this identity?</p>
             <div className="delete-confirm-buttons">
-              <button className="confirm-btn" onClick={confirmDelete}>
+              <button className="confirm-btn" onClick={confirmDelete} aria-label="Confirm deletion">
                 Confirm
               </button>
-              <button className="cancel-btn" onClick={cancelDelete}>
+              <button className="cancel-btn" onClick={cancelDelete} aria-label="Cancel deletion">
                 Cancel
               </button>
             </div>
