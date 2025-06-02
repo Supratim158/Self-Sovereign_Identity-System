@@ -546,3 +546,25 @@ body {
   outline-offset: 2px;
   box-shadow: 0 0 8px rgba(43, 255, 136, 0.5);
 }
+.input-group select {
+  padding: 0.9rem 1.2rem;
+  font-size: 1.1rem;
+  border-radius: 12px;
+  border: none;
+  outline: none;
+  background: #fefefe;
+  color: #333;
+  width: 100%;
+  box-sizing: border-box;
+  appearance: none; /* Remove default dropdown arrow */
+  background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+  background-repeat: no-repeat;
+  background-position-x: calc(100% - 1rem);
+  background-position-y: 50%;
+}
+
+.input-group select:focus {
+  outline: 3px solid #2bff88;
+  outline-offset: 2px;
+  box-shadow: 0 0 8px rgba(43, 255, 136, 0.5);
+}

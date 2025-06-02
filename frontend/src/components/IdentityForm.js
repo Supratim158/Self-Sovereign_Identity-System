@@ -32,6 +32,7 @@ export default function IdentityForm() {
   const [email, setEmail] = useState("");
   const [dob, setDob] = useState("");
   const [aadhar, setAadhar] = useState("");
+  const [gender, setGender] = useState(""); // New state for gender
   const [metadata, setMetadata] = useState("");
   const [encryptionKey, setEncryptionKey] = useState("");
   const [customAttributes, setCustomAttributes] = useState([{ key: "", value: "" }]);
@@ -126,6 +127,7 @@ export default function IdentityForm() {
       const meta = JSON.stringify({
         dob,
         aadhar: encryptData(aadhar, encryptionKey),
+        gender: gender || "Not specified", // Include gender in metadata
         additional: metadata || "No metadata",
         custom: customMeta,
       });
@@ -140,6 +142,7 @@ export default function IdentityForm() {
         email,
         dob,
         aadhar: encryptData(aadhar, encryptionKey),
+        gender: gender || "Not specified", // Store gender in history
         metadata: meta,
         status: Math.random() > 0.5 ? "Verified" : "Pending",
         txHash: receipt.hash,
@@ -167,6 +170,7 @@ export default function IdentityForm() {
     setEmail("");
     setDob("");
     setAadhar("");
+    setGender(""); // Reset gender
     setMetadata("");
     setEncryptionKey("");
     setCustomAttributes([{ key: "", value: "" }]);
@@ -216,7 +220,7 @@ export default function IdentityForm() {
       setError("No history to export");
       return;
     }
-    const headers = ["Name", "Email", "DOB", "Aadhar", "Metadata", "Status", "Transaction Hash"];
+    const headers = ["Name", "Email", "DOB", "Aadhar", "Gender", "Metadata", "Status", "Transaction Hash"]; // Added Gender
     const escapeCSV = (value) => `"${String(value).replace(/"/g, '""')}"`;
     const rows = history.map((item) => [
       escapeCSV(item.name),
@@ -227,6 +231,7 @@ export default function IdentityForm() {
           ? decryptData(item.aadhar, encryptionKey)
           : "Encrypted"
       ),
+      escapeCSV(item.gender), // Include gender in CSV
       escapeCSV(item.metadata),
       escapeCSV(item.status),
       escapeCSV(item.txHash),
@@ -320,6 +325,7 @@ export default function IdentityForm() {
         ? decryptData(item.aadhar, encryptionKey)
         : ""
     );
+    setGender(item.gender || ""); // Load gender for editing
     setMetadata(JSON.parse(item.metadata).additional || "");
     const custom = JSON.parse(item.metadata).custom || {};
     setCustomAttributes(Object.entries(custom).map(([key, value]) => ({ key, value })));
@@ -348,7 +354,6 @@ export default function IdentityForm() {
       item.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Moved totalPages declaration before its use
   const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedHistory = filteredHistory.slice(startIndex, startIndex + itemsPerPage);
@@ -439,6 +444,26 @@ export default function IdentityForm() {
                   onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
                   onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
                 />
+              </Tooltip>
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="gender">Gender</label>
+              <Tooltip text="Select your gender (optional)">
+                <select
+                  id="gender"
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  aria-describedby="tooltip-gender"
+                  onFocus={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.add("visible")}
+                  onBlur={(e) => e.target.closest(".tooltip-container").querySelector(".tooltip-text").classList.remove("visible")}
+                >
+                  <option value="">Select gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
+                </select>
               </Tooltip>
             </div>
 
@@ -680,7 +705,8 @@ export default function IdentityForm() {
                   paginatedHistory.map((item, index) => (
                     <li key={startIndex + index} aria-label={`Identity ${item.name}`}>
                       <strong>Name:</strong> {item.name} | <strong>Email:</strong> {item.email} | 
-                      <strong>DOB:</strong> {item.dob} | <strong>Aadhar:</strong> 
+                      <strong>DOB:</strong> {item.dob} | <strong>Gender:</strong> {item.gender} | 
+                      <strong>Aadhar:</strong> 
                       {encryptionKey && decryptData(item.aadhar, encryptionKey)
                         ? decryptData(item.aadhar, encryptionKey)
                         : "Encrypted"} | <strong>Metadata:</strong> {item.metadata} | 
